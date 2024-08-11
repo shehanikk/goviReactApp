@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { StyleSheet, View, Text, FlatList } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from './firebase'; // Ensure correct Firebase configuration
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function HomeScreen() {
   const [lands, setLands] = useState([]);
@@ -34,7 +35,11 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Lands</Text>
+      <View style={styles.topBar}>
+        <MaterialCommunityIcons name="menu" size={24} color="#fff" />
+        <Text style={styles.topBarHeading}>Lands</Text>
+        <MaterialCommunityIcons name="bell" size={24} color="#fff" />
+      </View>
       <FlatList
         data={lands}
         renderItem={renderItem}
@@ -48,17 +53,23 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
     backgroundColor: '#fff',
   },
-  heading: {
-    fontSize: 24,
+  topBar: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  topBarHeading: {
+    color: '#fff',
+    fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 16,
-    textAlign: 'center',
   },
   listContainer: {
-    paddingBottom: 16,
+    padding: 16,
   },
   card: {
     backgroundColor: '#f8f9fa',

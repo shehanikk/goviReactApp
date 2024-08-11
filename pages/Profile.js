@@ -5,6 +5,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { db } from './firebase';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Modal from 'react-native-modal';
+import { getAuth, signOut } from 'firebase/auth';
 
 const ProfileScreen = ({ navigation }) => {
   const [products, setProducts] = useState([]);
@@ -65,17 +66,25 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   const handleDelete = async (id) => {
-    console.log(`Attempting to delete product with ID: ${id}`);
     try {
       const productRef = doc(db, 'products', id);
-      console.log('Product reference:', productRef);
       await deleteDoc(productRef);
-      console.log('Product deleted successfully');
       fetchProducts(); // Refresh the product list after deletion
       Alert.alert('Success', 'Product deleted successfully!');
     } catch (error) {
       console.error('Error deleting product:', error);
       Alert.alert('Error', 'Failed to delete product.');
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      const auth = getAuth();
+      await signOut(auth);
+      navigation.navigate('WelcomeScreen');
+    } catch (error) {
+      console.error('Error logging out:', error);
+      Alert.alert('Error', 'Failed to log out.');
     }
   };
 
@@ -96,17 +105,14 @@ const ProfileScreen = ({ navigation }) => {
     </View>
   );
 
-  const handleLogout = () => {
-    Alert.alert('Logout', 'You have been logged out.');
-    navigation.navigate('WelcomeScreen'); // Redirect to the Welcome screen
-  };
-  
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutButtonText}>Logout</Text>
-      </TouchableOpacity>
-      <Text style={styles.heading}>Your Products</Text>
+      <View style={styles.topBar}>
+        <Text style={styles.topBarHeading}>Your Products</Text>
+        <TouchableOpacity onPress={handleLogout}>
+          <MaterialCommunityIcons name="logout" size={24} color="#fff" />
+        </TouchableOpacity>
+      </View>
       <FlatList
         data={products}
         renderItem={renderProduct}
@@ -140,8 +146,8 @@ const ProfileScreen = ({ navigation }) => {
             value={description}
             onChangeText={setDescription}
           />
-          <Button title="Save" onPress={handleSave} color="#4CAF50" marginBottom='10' />
-          <Button title="Cancel" onPress={() => setModalVisible(false)}  />
+          <Button title="Save" onPress={handleSave} color="#4CAF50" />
+          <Button title="Cancel" onPress={() => setModalVisible(false)} />
         </View>
       </Modal>
     </View>
@@ -151,31 +157,28 @@ const ProfileScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
     backgroundColor: '#f8f9fa',
   },
-  logoutButton: {
-    position: 'absolute',
-    top: 16,
-    right: 16,
-    backgroundColor: 'red',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 5,
+  topBar: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  logoutButtonText: {
+  topBarHeading: {
     color: '#fff',
-    fontSize: 14,
-    marginBottom: 4,
+    fontSize: 20,
+    fontWeight: 'bold',
   },
   heading: {
     fontSize: 24,
     fontWeight: 'bold',
-    textAlign: 'center',
-    marginVertical: 16,
-    color: '#333',
+    color: '#fff',
   },
   productList: {
+    padding: 16,
     paddingBottom: 16,
   },
   card: {
@@ -212,10 +215,6 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     paddingHorizontal: 8,
     marginBottom: 16,
-  },
-  button: {
-    backgroundColor:'#4CAF50',
-    marginBottom: 10,
   },
 });
 
