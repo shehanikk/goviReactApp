@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { TextInput, Button, View, StyleSheet, Image, Alert, Text } from 'react-native';
+import { TextInput, Button, View, StyleSheet, Image, Alert, Text, TouchableOpacity } from 'react-native';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from './firebase'; // Import your Firebase configuration
 import uuid from 'react-native-uuid';
+import * as ImagePicker from 'expo-image-picker';
+import { uploadImage } from './utils/firebaseUtils';
 
 const AddProductPage = ({ navigation }) => {
   const initialProductData = {
-    id: uuid.v4(), // Generate UUID using react-native-uuid
+    id: uuid.v4(),
     location: '',
     landType: '',
     landSize: '',
@@ -15,6 +17,7 @@ const AddProductPage = ({ navigation }) => {
   };
 
   const [productData, setProductData] = useState(initialProductData);
+  const [uploading, setUploading] = useState(false);
 
   const handleInputChange = (name, value) => {
     setProductData(prevData => ({
@@ -23,11 +26,42 @@ const AddProductPage = ({ navigation }) => {
     }));
   };
 
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+  
+    if (!result.canceled) {
+      handleImageUpload(result.uri);
+    }
+  };
+
+ 
+  const handleImageUpload = async (uri) => {
+    setUploading(true);
+    try {
+      const downloadURL = await uploadImage(uri, productData.id);
+      console.log('Image URL:', downloadURL); // Debug URL
+      setProductData(prevData => ({
+        ...prevData,
+        image: downloadURL,
+      }));
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      Alert.alert('Error', 'Failed to upload image.');
+    } finally {
+      setUploading(false);
+    }
+  };
+  
   const saveProduct = async (productData) => {
     try {
       const productRef = doc(db, 'products', productData.id);
       await setDoc(productRef, productData);
-      console.log('Product saved successfully');
+      console.log('Product saved successfully:', productData); // Debug product data
       Alert.alert('Success', 'Product saved successfully!');
       setProductData(initialProductData); // Reset form fields
       navigation.navigate('HomeScreen');
@@ -36,10 +70,11 @@ const AddProductPage = ({ navigation }) => {
       Alert.alert('Error', 'Failed to save product.');
     }
   };
+  
 
   const handleSubmit = () => {
-    if (!productData.location || !productData.landType || !productData.landSize || !productData.description) {
-      Alert.alert('Validation Error', 'Please fill in all required fields.');
+    if (!productData.location || !productData.landType || !productData.landSize || !productData.description || !productData.image) {
+      Alert.alert('Validation Error', 'Please fill in all required fields and add an image.');
       return;
     }
     saveProduct(productData);
@@ -73,6 +108,9 @@ const AddProductPage = ({ navigation }) => {
         style={[styles.input, { height: 100 }]} // Adjust height for multiline input
         multiline
       />
+      <TouchableOpacity onPress={pickImage} style={styles.button}>
+        <Text style={styles.buttonText}>{uploading ? 'Uploading...' : 'Pick an Image'}</Text>
+      </TouchableOpacity>
       {productData.image ? (
         <Image source={{ uri: productData.image }} style={styles.image} />
       ) : null}
@@ -104,6 +142,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 5,
     height: 50,
+  },
+  button: {
+    backgroundColor: '#4CAF50',
+    borderRadius: 5,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
   },
   image: {
     width: '100%',

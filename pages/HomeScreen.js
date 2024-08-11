@@ -1,9 +1,8 @@
 import React, { useState, useCallback } from 'react';
-import { StyleSheet, View, Text, FlatList } from 'react-native';
+import { StyleSheet, View, Text, FlatList, Image } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from './firebase'; // Ensure correct Firebase configuration
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function HomeScreen() {
   const [lands, setLands] = useState([]);
@@ -26,6 +25,11 @@ export default function HomeScreen() {
 
   const renderItem = ({ item }) => (
     <View style={styles.card}>
+      {item.image ? (
+        <Image source={{ uri: item.image }} style={styles.cardImage} />
+      ) : (
+        <Text>No image available</Text>
+      )}
       <Text style={styles.cardTitle}>Location: {item.location}</Text>
       <Text>Land Type: {item.landType}</Text>
       <Text>Land Size: {item.landSize}</Text>
@@ -36,9 +40,7 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.topBar}>
-        <MaterialCommunityIcons name="menu" size={24} color="#fff" />
         <Text style={styles.topBarHeading}>Lands</Text>
-        <MaterialCommunityIcons name="bell" size={24} color="#fff" />
       </View>
       <FlatList
         data={lands}
@@ -61,7 +63,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
   },
   topBarHeading: {
     color: '#fff',
@@ -86,5 +88,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 8,
+  },
+  cardImage: {
+    width: '100%',
+    height: 200,
+    marginBottom: 16,
+    borderRadius: 8,
+    resizeMode: 'cover',
   },
 });
